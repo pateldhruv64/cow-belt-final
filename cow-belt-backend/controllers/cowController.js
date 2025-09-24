@@ -119,13 +119,9 @@ const addCowData = async (req, res) => {
       }
     }
     
-    console.log("📡 Advanced data saved:", {
-      cowId,
-      disease: predictionResult.disease,
-      confidence: predictionResult.confidence,
-      riskLevel: predictionResult.riskLevel,
-      anomalies: anomalies.length
-    });
+    if (process.env.NODE_ENV !== "production") {
+  console.log("📡 Advanced data saved:", data);
+}
 
     res.status(200).json({ 
       message: "Data saved successfully", 
