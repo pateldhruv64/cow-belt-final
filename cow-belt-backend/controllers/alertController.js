@@ -1,5 +1,5 @@
 const Alert = require('../models/Alert');
-const { notificationService } = require('../utils/notificationService');
+// const { notificationService } = require('../utils/notificationService');
 
 // POST: Create new alert
 const createAlert = async (req, res) => {
@@ -41,14 +41,14 @@ const createAlert = async (req, res) => {
     await newAlert.save();
 
     // Send notification
-    const notificationResult = await notificationService.sendNotification({
-      type,
-      severity,
-      cowId,
-      message,
-      value: data?.temperature || data?.motionChange || data?.value,
-      timestamp: newAlert.timestamp
-    });
+    // const notificationResult = await notificationService.sendNotification({
+    //   type,
+    //   severity,
+    //   cowId,
+    //   message,
+    //   value: data?.temperature || data?.motionChange || data?.value,
+    //   timestamp: newAlert.timestamp
+    // });
 
     console.log(`🚨 Alert created: ${newAlert.alertId} - ${newAlert.title}`);
 

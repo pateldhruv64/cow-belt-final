@@ -80,10 +80,10 @@ const addCowData = async (req, res) => {
       await newAlert.save();
       
       // Send notification
-      await notificationService.sendNotification({
-        ...alertData,
-        timestamp: newData.timestamp
-      });
+      // await notificationService.sendNotification({
+      //   ...alertData,
+      //   timestamp: newData.timestamp
+      // });
     }
     
     // Create alerts for anomalies
@@ -107,14 +107,14 @@ const addCowData = async (req, res) => {
           await newAlert.save();
           
           // Send notification
-          await notificationService.sendNotification({
-            type: anomaly.type.includes('temperature') ? 'temperature' : 'activity',
-            severity: anomaly.severity,
-            cowId: cowId,
-            message: anomaly.message,
-            value: anomaly.value,
-            timestamp: newData.timestamp
-          });
+          // await notificationService.sendNotification({
+          //   type: anomaly.type.includes('temperature') ? 'temperature' : 'activity',
+          //   severity: anomaly.severity,
+          //   cowId: cowId,
+          //   message: anomaly.message,
+          //   value: anomaly.value,
+          //   timestamp: newData.timestamp
+          // });
         }
       }
     }
