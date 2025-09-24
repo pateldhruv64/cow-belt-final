@@ -63,11 +63,6 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Root route to fix 404 on /
-app.get('/', (req, res) => {
-  res.send('🐄 Cow Belt Backend is Live!');
-});
-
 // Start server
 const PORT = process.env.PORT || 5000;
 

@@ -11,12 +11,12 @@ import FarmMap from "../components/FarmMap";
 import { getCowDataByDateRange } from "../services/cowService";
 import { downloadCsv } from "../utils/exportCsv";
 import CowProfile from "./CowProfile";
-import SettingsPanel from "../components/SettingsPanel";
-import AlertManagement from "../components/AlertManagement";
 import { connectLive } from "../utils/liveClient";
 import { notify } from "../utils/notify";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
+  const { currentUser, hasRole } = useAuth();
   const [cows, setCows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [useDateRange, setUseDateRange] = useState(false);
@@ -25,15 +25,15 @@ const Dashboard = () => {
   const [days, setDays] = useState(7);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [selectedCowId, setSelectedCowId] = useState(null);
-  const [autoRefreshMs, setAutoRefreshMs] = useState(5000);
-  const [isLive, setIsLive] = useState(true);
-  const intervalRef = useRef(null);
   const [settings, setSettings] = useState(() => {
     try {
       const s = localStorage.getItem('cowbelt_settings');
       return s ? JSON.parse(s) : {};
     } catch { return {}; }
   });
+  const [autoRefreshMs, setAutoRefreshMs] = useState((settings && typeof settings.autoRefreshMs === 'number') ? settings.autoRefreshMs : 5000);
+  const [isLive, setIsLive] = useState(true);
+  const intervalRef = useRef(null);
 
   const fetchData = async () => {
     try {
@@ -56,7 +56,7 @@ const Dashboard = () => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (isLive) {
+    if (isLive && autoRefreshMs > 0) {
       intervalRef.current = setInterval(fetchData, autoRefreshMs);
     }
     return () => {
@@ -66,8 +66,8 @@ const Dashboard = () => {
 
   // Optional WebSocket live updates (if backend provides ws://host/live)
   useEffect(() => {
-    if (!isLive) return;
-    const api = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    if (!isLive || settings?.wsEnabled === false) return;
+    const api = (settings?.apiBase || import.meta.env.VITE_API_URL || "http://localhost:5000");
     const wsUrl = api.replace(/^http/, 'ws') + "/live";
     const client = connectLive({
       url: wsUrl,
@@ -92,7 +92,7 @@ const Dashboard = () => {
       }
     });
     return () => client.close();
-  }, [isLive]);
+  }, [isLive, settings]);
 
   // Calculate alert count
   const alertCount = cows.filter(cow => 
@@ -172,16 +172,16 @@ const Dashboard = () => {
         lastUpdate={lastUpdate} 
       />
       
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-3 sm:p-6">
         {/* Top controls */}
-        <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
           <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-gray-600">Auto-refresh:</label>
             <select
               value={autoRefreshMs}
               onChange={(e) => setAutoRefreshMs(Number(e.target.value))}
-              className="text-sm border border-gray-300 rounded px-2 py-1"
+              className="text-sm border border-gray-300 rounded px-2 py-1 min-w-16"
             >
               <option value={0}>Off</option>
               <option value={5000}>5s</option>
@@ -190,13 +190,13 @@ const Dashboard = () => {
             </select>
             <button
               onClick={() => setIsLive((v) => !v)}
-              className={`px-3 py-1 rounded text-sm ${isLive ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+              className={`px-3 py-1 rounded text-sm min-w-16 ${isLive ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
             >
               {isLive ? 'Pause' : 'Resume'}
             </button>
             <button
               onClick={handleExport}
-              className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
+              className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white min-w-20"
             >
               ⬇️ Export CSV
             </button>
@@ -209,42 +209,33 @@ const Dashboard = () => {
         {/* Alerts Section */}
         <Alerts cows={uniqueCows} />
 
-        {/* Settings */}
-        <div className="mb-6">
-          <SettingsPanel initial={settings} onSave={handleSaveSettings} />
-        </div>
-
-        {/* Alert Management */}
-        <div className="mb-6">
-          <AlertManagement />
-        </div>
         
         {/* Historical Controls */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
               <h3 className="text-xl font-bold text-gray-800 flex items-center">🕒 Historical Data</h3>
               <p className="text-sm text-gray-500">View trends for a recent window or a custom date range.</p>
             </div>
-            <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-700">Mode:</label>
                 <select
                   value={useDateRange ? "range" : "days"}
                   onChange={(e) => setUseDateRange(e.target.value === "range")}
-                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                  className="text-sm border border-gray-300 rounded px-2 py-1 min-w-24"
                 >
                   <option value="days">Last N days</option>
                   <option value="range">Date range</option>
                 </select>
               </div>
               {!useDateRange ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <label className="text-sm text-gray-700">Days:</label>
                   <select
                     value={days}
                     onChange={(e) => setDays(Number(e.target.value))}
-                    className="text-sm border border-gray-300 rounded px-2 py-1"
+                    className="text-sm border border-gray-300 rounded px-2 py-1 min-w-16"
                   >
                     <option value={1}>1</option>
                     <option value={3}>3</option>
@@ -252,21 +243,21 @@ const Dashboard = () => {
                     <option value={14}>14</option>
                     <option value={30}>30</option>
                   </select>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => setDays(7)} className="text-xs px-2 py-1 rounded border">7d</button>
-                    <button onClick={() => setDays(14)} className="text-xs px-2 py-1 rounded border">14d</button>
-                    <button onClick={() => setDays(30)} className="text-xs px-2 py-1 rounded border">30d</button>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <button onClick={() => setDays(7)} className="text-xs px-2 py-1 rounded border min-w-8">7d</button>
+                    <button onClick={() => setDays(14)} className="text-xs px-2 py-1 rounded border min-w-8">14d</button>
+                    <button onClick={() => setDays(30)} className="text-xs px-2 py-1 rounded border min-w-8">30d</button>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex flex-col">
                     <label className="text-xs text-gray-600">Start date</label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
+                      className="text-sm border border-gray-300 rounded px-2 py-1 min-w-32"
                     />
                   </div>
                   <div className="flex flex-col">
@@ -275,12 +266,12 @@ const Dashboard = () => {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
+                      className="text-sm border border-gray-300 rounded px-2 py-1 min-w-32"
                     />
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => { const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); setStartDate(s.toISOString().split('T')[0]); setEndDate(t.toISOString().split('T')[0]); }} className="text-xs px-2 py-1 rounded border">Last 7d</button>
-                    <button onClick={() => { const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); setStartDate(s.toISOString().split('T')[0]); setEndDate(t.toISOString().split('T')[0]); }} className="text-xs px-2 py-1 rounded border">Last 30d</button>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <button onClick={() => { const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); setStartDate(s.toISOString().split('T')[0]); setEndDate(t.toISOString().split('T')[0]); }} className="text-xs px-2 py-1 rounded border min-w-16">Last 7d</button>
+                    <button onClick={() => { const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); setStartDate(s.toISOString().split('T')[0]); setEndDate(t.toISOString().split('T')[0]); }} className="text-xs px-2 py-1 rounded border min-w-16">Last 30d</button>
                   </div>
                 </div>
               )}
@@ -290,13 +281,13 @@ const Dashboard = () => {
         
         {/* Charts Section */}
         {uniqueCows.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-8">
             {/* Farm Map */}
-            <div className="lg:col-span-2 xl:col-span-2">
+            <div className="lg:col-span-2 xl:col-span-2 order-1">
               <FarmMap cows={uniqueCows} />
             </div>
             {/* Temperature Trends Chart */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-2">
               <TemperatureTrendChart 
                 cowId={uniqueCows[0]?.cowId}
                 days={!useDateRange ? days : undefined}
@@ -306,7 +297,7 @@ const Dashboard = () => {
             </div>
             
             {/* Motion Activity Chart */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-3">
               <MotionActivityChart 
                 cowId={uniqueCows[0]?.cowId}
                 days={!useDateRange ? days : undefined}
@@ -316,7 +307,7 @@ const Dashboard = () => {
             </div>
             
             {/* Health Gauge */}
-            <div className="lg:col-span-1 xl:col-span-1">
+            <div className="lg:col-span-1 xl:col-span-1 order-4">
               <HealthGauge 
                 cowId={uniqueCows[0]?.cowId}
                 healthScore={uniqueCows[0]?.healthScore || 85}
@@ -328,13 +319,14 @@ const Dashboard = () => {
           </div>
         )}
         
+
         {/* Cows List Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
             <h3 className="text-xl font-bold text-gray-800 flex items-center">
               🐄 Cow Monitoring
             </h3>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="text-sm text-gray-500">
                 Showing {uniqueCows.length} cows
               </div>

@@ -102,26 +102,36 @@ const exportReport = async (req, res) => {
     
     const exportedData = await reportGenerator.exportReport(report, format);
     
-    // Set appropriate headers based on format
-    const headers = {
-      'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="cow-belt-${type}-report.${format}"`
-    };
-    
-    switch (format) {
-      case 'csv':
-        headers['Content-Type'] = 'text/csv';
-        break;
-      case 'excel':
-        headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        break;
-      case 'pdf':
-        headers['Content-Type'] = 'application/pdf';
-        break;
+    // Handle different export formats
+    if (format === 'pdf' && typeof exportedData === 'object' && exportedData.type === 'html') {
+      // For PDF, send HTML content that can be converted to PDF
+      res.set({
+        'Content-Type': 'text/html',
+        'Content-Disposition': `attachment; filename="${exportedData.filename}"`
+      });
+      res.send(exportedData.content);
+    } else {
+      // Set appropriate headers for other formats
+      const headers = {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="cow-belt-${type}-report.${format}"`
+      };
+      
+      switch (format) {
+        case 'csv':
+          headers['Content-Type'] = 'text/csv';
+          break;
+        case 'excel':
+          headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'json':
+          headers['Content-Type'] = 'application/json';
+          break;
+      }
+      
+      res.set(headers);
+      res.send(exportedData);
     }
-    
-    res.set(headers);
-    res.send(exportedData);
   } catch (err) {
     console.error('❌ Error exporting report:', err);
     res.status(500).json({ error: err.message });

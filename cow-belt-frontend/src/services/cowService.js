@@ -167,3 +167,109 @@ export const getHealthGaugeData = async (cowId = null) => {
     return { healthScore: 85, riskLevel: 'Low' };
   }
 };
+
+// ML endpoints
+export const getMLHealthAnalysis = async (cowId, days = 7) => {
+  try {
+    if (!cowId) return { error: 'Cow ID is required' };
+    const res = await axios.get(`${API_URL}/api/ml/health-analysis?cowId=${encodeURIComponent(cowId)}&days=${days}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching ML health analysis:', err);
+    return { analysis: { temperature: [], motion: [], health: {} }, dataPoints: 0 };
+  }
+};
+
+export const getMLAnomalies = async (hours = 24) => {
+  try {
+    const res = await axios.get(`${API_URL}/api/ml/anomalies?hours=${hours}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching anomalies:', err);
+    return { anomalies: [], totalAnomalies: 0 };
+  }
+};
+
+export const getMLInsights = async (days = 1) => {
+  try {
+    const res = await axios.get(`${API_URL}/api/ml/insights?days=${days}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching health insights:', err);
+    return { insights: [], totalInsights: 0 };
+  }
+};
+
+export const getMLPredictions = async (params = {}) => {
+  try {
+    const { cowId, days = 30 } = params || {};
+    const q = new URLSearchParams();
+    if (cowId) q.set('cowId', cowId);
+    q.set('days', String(days));
+    const res = await axios.get(`${API_URL}/api/ml/predictions?${q.toString()}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching predictive analytics:', err);
+    return { predictions: [], totalCows: 0 };
+  }
+};
+
+export const getMLPerformance = async (days = 7) => {
+  try {
+    const res = await axios.get(`${API_URL}/api/ml/performance?days=${days}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching ML performance:', err);
+    return { metrics: { totalPredictions: 0, accuracy: 0 }, performance: {} };
+  }
+};
+
+// Reports
+export const getAvailableReports = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/api/reports/available`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching available reports:', err);
+    return { reportTypes: [], exportFormats: [] };
+  }
+};
+
+export const getReportStatistics = async (days = 30) => {
+  try {
+    const res = await axios.get(`${API_URL}/api/reports/statistics?days=${days}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error fetching report statistics:', err);
+    return { statistics: null };
+  }
+};
+
+export const generateReport = async ({ type, params = {} }) => {
+  try {
+    const map = {
+      health_summary: 'health-summary',
+      daily: 'daily',
+      weekly: 'weekly',
+      alert: 'alerts'
+    };
+    const path = map[type];
+    const q = new URLSearchParams(params);
+    const res = await axios.get(`${API_URL}/api/reports/${path}?${q.toString()}`);
+    return res.data;
+  } catch (err) {
+    console.error('Error generating report:', err);
+    return { success: false, report: null };
+  }
+};
+
+export const exportReport = async ({ type, format = 'json', params = {} }) => {
+  try {
+    const q = new URLSearchParams({ type, format, ...params });
+    const res = await axios.get(`${API_URL}/api/reports/export?${q.toString()}`, { responseType: 'blob' });
+    return res;
+  } catch (err) {
+    console.error('Error exporting report:', err);
+    throw err;
+  }
+};
