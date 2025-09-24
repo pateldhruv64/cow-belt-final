@@ -27,6 +27,14 @@ app.use('/api/ml', mlRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/reports', reportRoutes);
 
+
+
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
+
+
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
