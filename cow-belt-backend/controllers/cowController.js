@@ -61,30 +61,7 @@ const addCowData = async (req, res) => {
         value: predictionResult.disease
       };
       
-<<<<<<< HEAD
       // Check for duplicate alert
-=======
-      // Create alert in database
-      // const newAlert = new Alert({
-      //   type: alertData.type,
-      //   severity: alertData.severity,
-      //   source: { cowId: cowId },
-      //   title: `Health Alert - Cow ${cowId}`,
-      //   description: `Health issue detected: ${predictionResult.disease}`,
-      //   message: alertData.message,
-      //   data: {
-      //     temperature,
-      //     motionChange,
-      //     healthScore: predictionResult.confidence * 100,
-      //     customData: { disease: predictionResult.disease, confidence: predictionResult.confidence }
-      //   }
-      // });
-      
-      // await newAlert.save();
-
-
-// Check for duplicate alert
->>>>>>> d9bc38e38b55b2466c66f8883e46d8035f31b130
 const lastAlert = await Alert.findOne({
   'source.cowId': cowId,
   'data.customData.disease': predictionResult.disease
@@ -119,12 +96,6 @@ if (
   console.log('✅ Alert saved to MongoDB');
 }
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> d9bc38e38b55b2466c66f8883e46d8035f31b130
       
       // Send notification
       // await notificationService.sendNotification({
