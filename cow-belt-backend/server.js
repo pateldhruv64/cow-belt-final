@@ -9,7 +9,7 @@ const cowDataRoutes = require('./routes/cowData');
 const analyticsRoutes = require('./routes/analytics');
 const mlRoutes = require('./routes/ml');
 const alertRoutes = require('./routes/alerts');
-const reportRoutes = require('./routes/reports');
+// const reportRoutes = require('./routes/reports');
 
 const app = express();
 
@@ -25,7 +25,7 @@ app.use('/api/cow/data', cowDataRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ml', mlRoutes);
 app.use('/api/alerts', alertRoutes);
-app.use('/api/reports', reportRoutes);
+// app.use('/api/reports', reportRoutes);
 
 
 
