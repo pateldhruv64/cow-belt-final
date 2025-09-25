@@ -3,7 +3,7 @@ import Dashboard from "./pages/Dashboard";
 import MLInsights from "./pages/MLInsights";
 // import Reports from "./pages/Reports";
 // import UserManagement from "./pages/UserManagement";
-import Settings from "./pages/Settings";
+// import Settings from "./pages/Settings";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -23,9 +23,9 @@ function App() {
         // case '/users':
           // setCurrentPage('users');
           // break;
-        case '/settings':
-          setCurrentPage('settings');
-          break;
+        // case '/settings':
+        //   setCurrentPage('settings');
+        //   break;
         default:
           setCurrentPage('dashboard');
       }
@@ -44,9 +44,9 @@ function App() {
       //   return <Reports />;
       // case 'users':
       //   return <UserManagement />;
-      case 'settings':
-        return <Settings />;
-      default:
+      // case 'settings':
+      //   return <Settings />;
+      // default:
         return <Dashboard />;
     }
   };
