@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Dashboard from "./pages/Dashboard";
 import MLInsights from "./pages/MLInsights";
-import Reports from "./pages/Reports";
+// import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import "./App.css";
@@ -17,9 +17,9 @@ function App() {
         case '/ml-insights':
           setCurrentPage('ml-insights');
           break;
-        case '/reports':
-          setCurrentPage('reports');
-          break;
+        // case '/reports':
+        //   setCurrentPage('reports');
+        //   break;
         case '/users':
           setCurrentPage('users');
           break;
@@ -40,8 +40,8 @@ function App() {
     switch (currentPage) {
       case 'ml-insights':
         return <MLInsights />;
-      case 'reports':
-        return <Reports />;
+      // case 'reports':
+      //   return <Reports />;
       case 'users':
         return <UserManagement />;
       case 'settings':
