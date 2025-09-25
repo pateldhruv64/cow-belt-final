@@ -96,7 +96,7 @@ if (lastAlert) {
 }
 
 if (isDuplicate) {
-  // console.log('⚠️ Duplicate alert detected. Not saving.');
+  console.log('⚠️ Duplicate alert detected. Not saving.');
 } else {
   const newAlert = new Alert({
     type: alertData.type,
@@ -114,7 +114,7 @@ if (isDuplicate) {
   });
 
   await newAlert.save();
-  // console.log('✅ Alert saved to MongoDB');
+  console.log('✅ Alert saved to MongoDB');
 }
 
 
@@ -129,25 +129,71 @@ if (isDuplicate) {
     }
     
     // Create alerts for anomalies
-    if (anomalies.length > 0) {
-      for (const anomaly of anomalies) {
-        if (anomaly.severity === 'critical' || anomaly.severity === 'high') {
-          const newAlert = new Alert({
-            type: anomaly.type.includes('temperature') ? 'Temperature' : 'Motion',
-            severity: anomaly.severity === 'critical' ? 'Critical' : 'High',
-            source: { cowId: cowId },
-            title: `Anomaly Alert - Cow ${cowId}`,
-            description: anomaly.message,
-            message: anomaly.message,
-            data: {
-              temperature,
-              motionChange,
-              customData: { anomalyType: anomaly.type, value: anomaly.value }
-            }
-          });
+    // if (anomalies.length > 0) {
+    //   for (const anomaly of anomalies) {
+    //     if (anomaly.severity === 'critical' || anomaly.severity === 'high') {
+    //       const newAlert = new Alert({
+    //         type: anomaly.type.includes('temperature') ? 'Temperature' : 'Motion',
+    //         severity: anomaly.severity === 'critical' ? 'Critical' : 'High',
+    //         source: { cowId: cowId },
+    //         title: `Anomaly Alert - Cow ${cowId}`,
+    //         description: anomaly.message,
+    //         message: anomaly.message,
+    //         data: {
+    //           temperature,
+    //           motionChange,
+    //           customData: { anomalyType: anomaly.type, value: anomaly.value }
+    //         }
+    //       });
           
-          await newAlert.save();
+    //       await newAlert.save();
           
+
+if (anomalies.length > 0) {
+  for (const anomaly of anomalies) {
+    if (anomaly.severity === 'critical' || anomaly.severity === 'high') {
+
+      // Check for duplicate
+      const lastAlert = await Alert.findOne({
+        'source.cowId': cowId,
+        'data.customData.anomalyType': anomaly.type
+      }).sort({ createdAt: -1 });
+
+      let isDuplicate = false;
+      if (lastAlert) {
+        isDuplicate =
+          lastAlert.severity === (anomaly.severity === 'critical' ? 'Critical' : 'High') &&
+          lastAlert.title === `Anomaly Alert - Cow ${cowId}` &&
+          lastAlert.description === anomaly.message &&
+          lastAlert.message === anomaly.message;
+      }
+
+      if (isDuplicate) {
+        // console.log('⚠️ Duplicate anomaly alert detected. Not saving.');
+      } else {
+        const newAlert = new Alert({
+          type: anomaly.type.includes('temperature') ? 'Temperature' : 'Motion',
+          severity: anomaly.severity === 'critical' ? 'Critical' : 'High',
+          source: { cowId: cowId },
+          title: `Anomaly Alert - Cow ${cowId}`,
+          description: anomaly.message,
+          message: anomaly.message,
+          data: {
+            temperature,
+            motionChange,
+            customData: { anomalyType: anomaly.type, value: anomaly.value }
+          }
+        });
+
+        await newAlert.save();
+        // console.log('✅ Anomaly alert saved to MongoDB');
+      }
+    }
+  }
+}
+
+
+
           // Send notification
           // await notificationService.sendNotification({
           //   type: anomaly.type.includes('temperature') ? 'temperature' : 'activity',
@@ -157,9 +203,9 @@ if (isDuplicate) {
           //   value: anomaly.value,
           //   timestamp: newData.timestamp
           // });
-        }
-      }
-    }
+        
+      
+    
     
     if (process.env.NODE_ENV !== "production") {
   console.log("📡 Advanced data saved:", data);
