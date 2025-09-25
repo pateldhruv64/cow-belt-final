@@ -46,7 +46,7 @@ function App() {
       //   return <UserManagement />;
       // case 'settings':
       //   return <Settings />;
-      // default:
+       default:
         return <Dashboard />;
     }
   };
