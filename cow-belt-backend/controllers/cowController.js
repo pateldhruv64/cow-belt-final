@@ -96,7 +96,7 @@ if (lastAlert) {
 }
 
 if (isDuplicate) {
-  console.log('⚠️ Duplicate alert detected. Not saving.');
+  // console.log('⚠️ Duplicate alert detected. Not saving.');
 } else {
   const newAlert = new Alert({
     type: alertData.type,
@@ -114,7 +114,7 @@ if (isDuplicate) {
   });
 
   await newAlert.save();
-  console.log('✅ Alert saved to MongoDB');
+  // console.log('✅ Alert saved to MongoDB');
 }
 
 
