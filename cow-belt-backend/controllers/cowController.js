@@ -61,48 +61,30 @@ const addCowData = async (req, res) => {
         value: predictionResult.disease
       };
       
-      // Check for duplicate alert
-const lastAlert = await Alert.findOne({
-  'source.cowId': cowId,
-  'data.customData.disease': predictionResult.disease
-}).sort({ createdAt: -1 }); // latest alert pehle
-
-// Agar last alert exist karta hai aur current data same hai, to save na karo
-if (
-  lastAlert &&
-  lastAlert.data.temperature === temperature &&
-  lastAlert.data.motionChange === motionChange &&
-  lastAlert.data.healthScore === predictionResult.confidence * 100
-) {
-  console.log('⚠️ Duplicate alert detected. Not saving.');
-} else {
-  // Save new alert (same variable name: newAlert)
-  const newAlert = new Alert({
-    type: alertData.type,
-    severity: alertData.severity,
-    source: { cowId: cowId },
-    title: `Health Alert - Cow ${cowId}`,
-    description: `Health issue detected: ${predictionResult.disease}`,
-    message: alertData.message,
-    data: {
-      temperature,
-      motionChange,
-      healthScore: predictionResult.confidence * 100,
-      customData: { disease: predictionResult.disease, confidence: predictionResult.confidence }
-    }
-  });
-
-  await newAlert.save();
-  console.log('✅ Alert saved to MongoDB');
-}
-
+      // Create alert in database
+      const newAlert = new Alert({
+        type: alertData.type,
+        severity: alertData.severity,
+        source: { cowId: cowId },
+        title: `Health Alert - Cow ${cowId}`,
+        description: `Health issue detected: ${predictionResult.disease}`,
+        message: alertData.message,
+        data: {
+          temperature,
+          motionChange,
+          healthScore: predictionResult.confidence * 100,
+          customData: { disease: predictionResult.disease, confidence: predictionResult.confidence }
+        }
+      });
+      
+      await newAlert.save();
       
       // Send notification
       // await notificationService.sendNotification({
       //   ...alertData,
       //   timestamp: newData.timestamp
       // });
-     }
+    }
     
     // Create alerts for anomalies
     if (anomalies.length > 0) {
