@@ -85,19 +85,22 @@ const lastAlert = await Alert.findOne({
   'data.customData.disease': predictionResult.disease
 }).sort({ createdAt: -1 }); // latest alert pehle
 
-// Agar last alert exist karta hai aur current data same hai, to save na karo
-if (
-  lastAlert &&
-  lastAlert.data.temperature === temperature &&
-  lastAlert.data.motionChange === motionChange &&
-  lastAlert.data.healthScore === predictionResult.confidence * 100
-) {
-  console.log('⚠️ Duplicate alert detected. Not saving.');
+let isDuplicate = false;
+
+if (lastAlert) {
+  isDuplicate = 
+    lastAlert.severity === (predictionResult.riskLevel === 'Critical' ? 'Critical' : 'High') &&
+    lastAlert.title === `Health Alert - Cow ${cowId}` &&
+    lastAlert.description === `Health issue detected: ${predictionResult.disease}` &&
+    lastAlert.message === alertData.message;
+}
+
+if (isDuplicate) {
+  // console.log('⚠️ Duplicate alert detected. Not saving.');
 } else {
-  // Save new alert (same variable name: newAlert)
   const newAlert = new Alert({
     type: alertData.type,
-    severity: alertData.severity,
+    severity: predictionResult.riskLevel === 'Critical' ? 'Critical' : 'High',
     source: { cowId: cowId },
     title: `Health Alert - Cow ${cowId}`,
     description: `Health issue detected: ${predictionResult.disease}`,
@@ -111,8 +114,9 @@ if (
   });
 
   await newAlert.save();
-  console.log('✅ Alert saved to MongoDB');
+  // console.log('✅ Alert saved to MongoDB');
 }
+
 
 
 
