@@ -8,9 +8,9 @@ const Navbar = ({ totalCows, alertCount, lastUpdate }) => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: '🏠' },
     { path: '/ml-insights', label: 'ML Insights', icon: '🤖' },
-    { path: '/reports', label: 'Reports', icon: '📄', adminOnly: true },
-    { path: '/users', label: 'Users', icon: '👤', adminOnly: true },
-    { path: '/settings', label: 'Settings', icon: '⚙️', adminOnly: true },
+    // { path: '/reports', label: 'Reports', icon: '📄', adminOnly: true },
+    // { path: '/users', label: 'Users', icon: '👤', adminOnly: true },
+    // { path: '/settings', label: 'Settings', icon: '⚙️', adminOnly: true },
   ];
 
   const filteredNavItems = navItems.filter(item => !item.adminOnly || hasRole('admin'));
